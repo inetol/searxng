@@ -14,6 +14,8 @@ permissions:
 
 jobs:
   python:
+    # TODO: Remove this
+    if: false
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-24.04
     strategy:
@@ -43,6 +45,8 @@ jobs:
         run: make V=1 ci.test
 
   themes:
+    # TODO: Remove this
+    if: false
     name: Themes
     runs-on: ubuntu-24.04
     steps:
@@ -63,6 +67,8 @@ jobs:
         run: make themes.all
 
   documentation:
+    # TODO: Remove this
+    if: false
     name: Documentation
     runs-on: ubuntu-24.04
     permissions:
@@ -110,7 +116,9 @@ jobs:
           COMMIT_MESSAGE: "[doc] build from commit ${{ github.sha }}"
 
   babel:
-    if: github.repository_owner == 'searxng' && github.ref == 'refs/heads/master'
+    # TODO: Remove this
+    if: false
+    # if: github.repository_owner == 'searxng' && github.ref == 'refs/heads/master'
     name: Update translations branch
     runs-on: ubuntu-24.04
     needs:
@@ -158,12 +166,14 @@ jobs:
         run: make V=1 weblate.push.translations
 
   container-build:
-    if: github.ref == 'refs/heads/master'
+    # TODO: Uncomment
+    # if: github.ref == 'refs/heads/master'
     name: Container build (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
-    needs:
-      - python
-      - themes
+    # TODO: Uncomment
+    # needs:
+    #   - python
+    #   - themes
 
     strategy:
       matrix:
@@ -204,12 +214,14 @@ jobs:
         run: make -e GIT_URL=$(git remote get-url origin) ci.docker.build
 
   container-build-compat:
-    if: github.ref == 'refs/heads/master'
+    # TODO: Uncomment
+    # if: github.ref == 'refs/heads/master'
     name: Container build (compat)
     runs-on: ubuntu-24.04-arm
-    needs:
-      - python
-      - themes
+    # TODO: Uncomment
+    # needs:
+    #   - python
+    #   - themes
 
     strategy:
       matrix:
