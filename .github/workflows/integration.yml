@@ -211,7 +211,7 @@ jobs:
       - name: Build container image
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.docker.build
+        run: make -e GIT_URL=$(git remote get-url origin) ci.container.build
 
   container-build-compat:
     # TODO: Uncomment
@@ -259,7 +259,7 @@ jobs:
       - name: Build container image
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.docker.build
+        run: make -e GIT_URL=$(git remote get-url origin) ci.container.build
 
   container-release:
     if: github.repository_owner == 'searxng' && github.ref == 'refs/heads/master'
@@ -309,4 +309,4 @@ jobs:
         name: Push container images
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.docker.push
+        run: make -e GIT_URL=$(git remote get-url origin) ci.container.push
