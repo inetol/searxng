@@ -226,16 +226,16 @@ docker.build() {
                 warn_msg "The legacy builder is deprecated and will be removed in a future release: https://docs.docker.com/engine/deprecated/#legacy-builder-fallback"
             fi
 
-            params_build_builder="$docker_builder --platform=$platform --target=builder --cache-from=docker.io/searxng/searxng"
-            params_build="$docker_builder --platform=$platform --squash --cache-from=docker.io/searxng/searxng"
+            params_build_builder="$docker_builder --platform=$platform --target=builder"
+            params_build="$docker_builder --platform=$platform --squash"
         else
-            params_build_builder="build --platform=$platform --target=builder --layers --identity-label=false --cache-from=docker.io/searxng/searxng"
-            params_build="build --platform=$platform --layers --squash-all --omit-history --identity-label=false --cache-from=docker.io/searxng/searxng"
+            params_build_builder="build --platform=$platform --target=builder --layers --identity-label=false"
+            params_build="build --platform=$platform --layers --squash-all --omit-history --identity-label=false"
         fi
 
         if [ "$GITHUB_ACTIONS" = "true" ]; then
-            params_build_builder+=" --cache-to=docker.io/searxng/searxng"
-            params_build+=" --cache-to=docker.io/searxng/searxng"
+            params_build_builder+=" --cache-from=ghcr.io/searxng/searxng --cache-to=ghcr.io/searxng/searxng"
+            params_build+=" --cache-from=ghcr.io/searxng/searxng --cache-to=ghcr.io/searxng/searxng"
         fi
 
         # Define container image org/name

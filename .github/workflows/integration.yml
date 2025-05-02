@@ -198,6 +198,16 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Cache Python dependencies
+        id: cache-python
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./local
+            ./.nvm
+            ./node_modules
+          key: python-ubuntu-24.04-3.13-${{ hashFiles('requirements*.txt', 'setup.py','.nvmrc', 'package.json') }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -242,6 +252,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+
+      - name: Cache Python dependencies
+        id: cache-python
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./local
+            ./.nvm
+            ./node_modules
+          key: python-ubuntu-24.04-3.13-${{ hashFiles('requirements*.txt', 'setup.py','.nvmrc', 'package.json') }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
