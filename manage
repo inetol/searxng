@@ -143,6 +143,8 @@ docker.buildx() {
 }
 
 docker.build() {
+    pyenv.install
+
     local parch=${OVERRIDE_ARCH:-$(uname -m)}
     local container_engine
     local dockerfile
@@ -195,6 +197,7 @@ docker.build() {
 
     (
         set -e
+        pyenv.activate
 
         # Check if it is a git repository
         if [ ! -d .git ]; then
