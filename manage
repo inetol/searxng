@@ -380,11 +380,11 @@ docs.prebuild() {
     dump_return $?
 }
 
-ci.docker.build() {
+ci.container.build() {
     docker.buildx
 }
 
-ci.docker.push() {
+ci.container.push() {
     local parch=${OVERRIDE_ARCH:-$(uname -m)}
     local container_engine
     local arch
