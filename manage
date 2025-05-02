@@ -236,6 +236,7 @@ docker.build() {
         fi
 
         # Define container image org/name
+        # shellcheck disable=SC2001
         container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
         container_image_name="searxng"
 
@@ -426,6 +427,7 @@ ci.docker.push() {
     build_msg DOCKER "Container engine: $container_engine"
 
     # Define container image org/name
+    # shellcheck disable=SC2001
     container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
     container_image_name="searxng"
 
