@@ -1,3 +1,4 @@
+---
 name: Checker
 
 # yamllint disable-line rule:truthy
@@ -10,13 +11,16 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 env:
   PYTHON_VERSION: "3.13"
 
 jobs:
   checker:
     name: Checker
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     steps:
       # TODO: Check
       # - name: Setup system dependencies
@@ -41,9 +45,9 @@ jobs:
       - name: Setup cache Python
         uses: actions/cache@v4
         with:
-          key: "python-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements*.txt') }}"
+          key: "python-${{ env.PYTHON_VERSION }}-${{ hashFiles('./requirements*.txt') }}"
           restore-keys: "python-${{ env.PYTHON_VERSION }}-"
-          path: ./local
+          path: "./local"
 
       - name: Setup venv
         run: make V=1 install
