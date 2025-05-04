@@ -6,10 +6,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "59 23 28 * *"
-  # TODO: Remove this
-  pull_request:
-    branches:
-      - master
 
 permissions:
   contents: read
@@ -48,8 +44,8 @@ jobs:
       - name: Setup cache Python
         uses: actions/cache@v4
         with:
-          key: "python-${{ env.PYTHON_VERSION }}-${{ hashFiles('./requirements*.txt') }}"
-          restore-keys: "python-${{ env.PYTHON_VERSION }}-"
+          key: "python-${{ env.PYTHON_VERSION }}-${{ runner.arch }}-${{ hashFiles('./requirements*.txt') }}"
+          restore-keys: "python-${{ env.PYTHON_VERSION }}-${{ runner.arch }}-"
           path: "./local"
 
       - name: Setup venv
@@ -58,9 +54,7 @@ jobs:
       - name: Fetch data
         run: V=1 ./manage pyenv.cmd python "./searxng_extra/update/${{ matrix.fetch }}"
 
-      # TODO: Remove this
-      - if: false
-        name: Create Pull Request
+      - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
@@ -77,9 +71,7 @@ jobs:
           labels: |
             data
 
-      # TODO: Remove this
-      - if: false
-        name: Check outputs
+      - name: Check outputs
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
