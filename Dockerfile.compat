@@ -1,9 +1,13 @@
-FROM --platform=$TARGETPLATFORM docker.io/library/python:3.13-slim AS builder
+FROM docker.io/library/python:3.13-slim AS builder
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     build-essential \
     brotli \
+    # lxml
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
     # uwsgi
     libpcre3-dev \
  && rm -rf /var/lib/apt/lists/*
@@ -37,7 +41,7 @@ RUN grep -m1 root /etc/group > /tmp/.searxng.group \
  && echo "searxng:x:$SEARXNG_GID:" >> /tmp/.searxng.group \
  && echo "searxng:x:$SEARXNG_UID:$SEARXNG_GID:searxng:/usr/local/searxng:/bin/bash" >> /tmp/.searxng.passwd
 
-FROM --platform=$TARGETPLATFORM docker.io/library/python:3.13-slim
+FROM docker.io/library/python:3.13-slim
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
