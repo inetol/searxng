@@ -178,8 +178,7 @@ container.build() {
         platform="linux/$arch"
         ;;
     "ARMV7" | "armhf" | "armv7l" | "armv7")
-        # TODO: Move ARMv7 to a separated Dockerfile
-        dockerfile="Dockerfile"
+        dockerfile="Dockerfile.compat"
         arch="arm"
         variant="v7"
         platform="linux/$arch/$variant"
@@ -407,8 +406,7 @@ ci.container.build() {
         platform="linux/$arch"
         ;;
     "ARMV7" | "armhf" | "armv7l" | "armv7")
-        # TODO: Move ARMv7 to a separated Dockerfile
-        dockerfile="Dockerfile"
+        dockerfile="Dockerfile.compat"
         arch="arm"
         variant="v7"
         platform="linux/$arch/$variant"
