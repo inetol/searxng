@@ -9,7 +9,7 @@ on:
   # TODO: Remove this
   pull_request:
     branches:
-      - master
+      - container-gha
 
 permissions:
   contents: read

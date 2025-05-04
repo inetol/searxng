@@ -3,6 +3,10 @@ name: Container
 
 # yamllint disable-line rule:truthy
 on:
+  # TODO: Remove this
+  pull_request:
+    branches:
+      - container-gha
   workflow_run:
     workflows:
       - Integration
