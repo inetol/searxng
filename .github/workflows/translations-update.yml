@@ -1,10 +1,10 @@
-name: "Update translations"
+name: Update translations
 
 # yamllint disable-line rule:truthy
 on:
+  workflow_dispatch:
   schedule:
     - cron: "05 07 * * 5"
-  workflow_dispatch:
 
 jobs:
   babel:

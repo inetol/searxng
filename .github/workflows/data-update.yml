@@ -1,10 +1,10 @@
-name: "Update searx.data"
+name: Update searx.data
 
 # yamllint disable-line rule:truthy
 on:
+  workflow_dispatch:
   schedule:
     - cron: "59 23 28 * *"
-  workflow_dispatch:
 
 jobs:
   updateData:
