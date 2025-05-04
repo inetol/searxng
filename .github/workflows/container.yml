@@ -8,6 +8,7 @@ on:
       - Integration
     types:
       - completed
+    # TODO: Test container.yml on merge https://github.com/searxng/searxng/pull/4699
     branches:
       - master
 
