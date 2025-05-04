@@ -35,10 +35,13 @@ jobs:
         include:
           - arch: amd64
             os: ubuntu-24.04
-          - arch:
-              arm64
-              armv7
+            emulation: false
+          - arch: arm64
             os: ubuntu-24.04-arm
+            emulation: false
+          - arch: armv7
+            os: ubuntu-24.04-arm
+            emulation: true
 
     permissions:
       # Organization GHCR
@@ -71,7 +74,8 @@ jobs:
             /var/tmp/buildah-cache/
             /var/tmp/buildah-cache-*/
 
-      - name: Setup QEMU
+      - if: ${{ matrix.emulation }}
+        name: Setup QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Login to GHCR
@@ -84,7 +88,8 @@ jobs:
       - name: Build
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.container.build
+        # TODO: Revert to "ci.container.build" before PR merge
+        run: make -e GIT_URL=$(git remote get-url origin) container.build
 
   release:
     # TODO: Uncomment before merge
