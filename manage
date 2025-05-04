@@ -77,8 +77,9 @@ docs.:
   gh-pages  : deploy on gh-pages branch
   prebuild  : build reST include files (./${DOCS_BUILD}/includes)
   clean     : clean documentation build
-docker.:
-  build     : build docker image
+container.  :
+  build     : build container image
+  buildx    : build container image with BuildKit
 gecko.driver:
   download & install geckodriver if not already installed (required for
   robot_tests)
@@ -99,7 +100,7 @@ format.:
 ci.:
   container.:
     build   : build container image
-    push    : push container images to remote registry
+    release : push container images to remote registry
 EOF
     go.help
     node.help
@@ -138,11 +139,21 @@ webapp.run() {
     SEARXNG_DEBUG=1 pyenv.cmd python -m searx.webapp
 }
 
+# Alias
 docker.buildx() {
-    docker.build buildx
+    container.buildx
 }
 
+# Alias
 docker.build() {
+    container.build
+}
+
+container.buildx() {
+    container.build buildx
+}
+
+container.build() {
     pyenv.install
 
     local parch=${OVERRIDE_ARCH:-$(uname -m)}
@@ -174,11 +185,11 @@ docker.build() {
         platform="linux/$arch/$variant"
         ;;
     *)
-        echo "Unsupported architecture; (PARCH=\"$parch\")"
+        err_msg "Unsupported architecture; (PARCH=\"$parch\")"
         exit 1
         ;;
     esac
-    build_msg DOCKER "Building for platform: $platform"
+    build_msg CONTAINER "Selected platform: $platform"
 
     # Check if podman or docker is installed
     if command -v podman &>/dev/null; then
@@ -188,7 +199,7 @@ docker.build() {
     else
         die 1 "podman/docker is not installed"
     fi
-    build_msg DOCKER "Container engine: $container_engine"
+    build_msg CONTAINER "Engine: $container_engine"
 
     # Check if git is installed
     if ! command -v git &>/dev/null; then
@@ -215,12 +226,11 @@ docker.build() {
 
         # Get the last git commit id
         version_gitcommit=$(echo "$VERSION_TAG" | cut -d+ -f2)
-        build_msg DOCKER "Last commit: $version_gitcommit"
+        build_msg CONTAINER "Last commit: $version_gitcommit"
 
         if [ "$container_engine" = "docker" ]; then
-            # TODO: Check for buildx build settings
             if [ "$1" = "buildx" ]; then
-                docker_builder="buildx"
+                docker_builder="buildx build"
             else
                 docker_builder="build"
                 warn_msg "The legacy builder is deprecated and will be removed in a future release: https://docs.docker.com/engine/deprecated/#legacy-builder-fallback"
@@ -233,44 +243,30 @@ docker.build() {
             params_build="build --platform=$platform --layers --squash-all --omit-history --identity-label=false"
         fi
 
-        if [ "$GITHUB_ACTIONS" = "true" ]; then
-            params_build_builder+=" --cache-from=ghcr.io/searxng/searxng --cache-to=ghcr.io/searxng/searxng"
-            params_build+=" --cache-from=ghcr.io/searxng/searxng --cache-to=ghcr.io/searxng/searxng"
-        fi
-
         # Define container image org/name
         # shellcheck disable=SC2001
         container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
         container_image_name="searxng"
 
-        build_msg DOCKER "Building target builder: $container_engine $params_build_builder"
+        build_msg CONTAINER "Building..."
 
         # shellcheck disable=SC2086
         "$container_engine" $params_build_builder \
-            --build-arg=TIMESTAMP_SETTINGS="$(git log -1 --format="%cd" --date=unix -- ./searx/settings.yml)" \
-            --build-arg=TIMESTAMP_UWSGI="$(git log -1 --format="%cd" --date=unix -- ./dockerfiles/uwsgi.ini)" \
-            --tag="localhost/$container_image_organization/$container_image_name:$arch$variant-builder" \
-            --file="$dockerfile"
-
-        build_msg DOCKER "Building: $container_engine $params_build"
+            --build-arg="TIMESTAMP_SETTINGS=$(git log -1 --format="%cd" --date=unix -- ./searx/settings.yml)" \
+            --build-arg="TIMESTAMP_UWSGI=$(git log -1 --format="%cd" --date=unix -- ./dockerfiles/uwsgi.ini)" \
+            --tag="localhost/$container_image_organization/$container_image_name:builder" \
+            --file="./$dockerfile"
 
         # shellcheck disable=SC2086
         "$container_engine" $params_build \
-            --build-arg=GIT_URL="$GIT_URL" \
-            --build-arg=SEARXNG_GIT_VERSION="$VERSION_STRING" \
-            --build-arg=LABEL_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --build-arg=LABEL_VCS_REF="$(git rev-parse HEAD)" \
-            --build-arg=LABEL_VCS_URL="$GIT_URL" \
+            --build-arg="GIT_URL=$GIT_URL" \
+            --build-arg="SEARXNG_GIT_VERSION=$VERSION_STRING" \
+            --build-arg="LABEL_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --build-arg="LABEL_VCS_REF=$(git rev-parse HEAD)" \
+            --build-arg="LABEL_VCS_URL=$GIT_URL" \
             --tag="localhost/$container_image_organization/$container_image_name:latest" \
             --tag="localhost/$container_image_organization/$container_image_name:$DOCKER_TAG" \
-            --file="$dockerfile"
-
-        # Push to GHCR
-        if [ "$GITHUB_ACTIONS" = "true" ]; then
-            "$container_engine" tag "localhost/$container_image_organization/$container_image_name:latest" "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant"
-
-            "$container_engine" push "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant"
-        fi
+            --file="./$dockerfile"
     )
     dump_return $?
 }
@@ -384,16 +380,118 @@ docs.prebuild() {
 }
 
 ci.container.build() {
-    docker.buildx
-}
+    if ! "$GITHUB_ACTIONS"; then
+        die 1 "This command is intended to be run in GitHub Actions"
+    fi
 
-ci.container.push() {
+    pyenv.install
+
     local parch=${OVERRIDE_ARCH:-$(uname -m)}
-    local container_engine
+    local dockerfile
     local arch
     local variant
     local platform
-    local container_image_tag_version
+
+    # Setup arch specific
+    case $parch in
+    "X64" | "x86_64" | "amd64")
+        dockerfile="Dockerfile"
+        arch="amd64"
+        variant=""
+        platform="linux/$arch"
+        ;;
+    "ARM64" | "aarch64" | "arm64")
+        dockerfile="Dockerfile"
+        arch="arm64"
+        variant=""
+        platform="linux/$arch"
+        ;;
+    "ARMV7" | "armhf" | "armv7l" | "armv7")
+        # TODO: Move ARMv7 to a separated Dockerfile
+        dockerfile="Dockerfile"
+        arch="arm"
+        variant="v7"
+        platform="linux/$arch/$variant"
+        ;;
+    *)
+        err_msg "Unsupported architecture; (PARCH=\"$parch\")"
+        exit 1
+        ;;
+    esac
+    build_msg CONTAINER "Selected platform: $platform"
+
+    # Check if podman is installed
+    if ! command -v podman &>/dev/null; then
+        die 1 "podman is not installed"
+    fi
+
+    # Check if git is installed
+    if ! command -v git &>/dev/null; then
+        die 1 "git is not installed"
+    fi
+
+    (
+        set -eu
+        pyenv.activate
+
+        # Check if it is a git repository
+        if [ ! -d .git ]; then
+            die 1 "This is not Git repository"
+        fi
+
+        if ! git remote get-url origin 2>/dev/null; then
+            die 1 "there is no remote origin"
+        fi
+
+        # This is a git repository
+        git update-index -q --refresh
+        python -m searx.version freeze
+        eval "$(python -m searx.version)"
+
+        # Get the last git commit id
+        version_gitcommit=$(echo "$VERSION_TAG" | cut -d+ -f2)
+        build_msg CONTAINER "Last commit: $version_gitcommit"
+
+        # Define container image org/name
+        # shellcheck disable=SC2001
+        container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
+        container_image_name="searxng"
+
+        build_msg CONTAINER "Building..."
+
+        podman build --platform="$platform" --target=builder --layers --identity-label=false \
+            --cache-from="ghcr.io/$container_image_organization/cache" \
+            --cache-to="ghcr.io/$container_image_organization/cache" \
+            --build-arg="TIMESTAMP_SETTINGS=$(git log -1 --format="%cd" --date=unix -- ./searx/settings.yml)" \
+            --build-arg="TIMESTAMP_UWSGI=$(git log -1 --format="%cd" --date=unix -- ./dockerfiles/uwsgi.ini)" \
+            --tag="ghcr.io/$container_image_organization/cache:$container_image_name-$arch$variant-builder" \
+            --file="./$dockerfile"
+
+        podman build --platform="$platform" --layers --squash-all --omit-history --identity-label=false \
+            --cache-from="ghcr.io/$container_image_organization/cache" \
+            --cache-to="ghcr.io/$container_image_organization/cache" \
+            --build-arg="GIT_URL=$GIT_URL" \
+            --build-arg="SEARXNG_GIT_VERSION=$VERSION_STRING" \
+            --build-arg="LABEL_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --build-arg="LABEL_VCS_REF=$(git rev-parse HEAD)" \
+            --build-arg="LABEL_VCS_URL=$GIT_URL" \
+            --tag="ghcr.io/$container_image_organization/cache:$container_image_name-$arch$variant" \
+            --file="./$dockerfile"
+
+        podman push "ghcr.io/$container_image_organization/cache:$container_image_name-$arch$variant"
+    )
+    dump_return $?
+}
+
+ci.container.push() {
+    if ! "$GITHUB_ACTIONS"; then
+        die 1 "This command is intended to be run in GitHub Actions"
+    fi
+
+    local parch=${OVERRIDE_ARCH:-$(uname -m)}
+    local arch
+    local variant
+    local platform
 
     # Setup arch specific
     case $parch in
@@ -413,39 +511,39 @@ ci.container.push() {
         platform="linux/$arch/$variant"
         ;;
     *)
-        echo "Unsupported architecture; (PARCH=\"$parch\")"
+        err_msg "Unsupported architecture; (PARCH=\"$parch\")"
         exit 1
         ;;
     esac
-    build_msg DOCKER "Running for: $platform"
+    build_msg CONTAINER "Selected platform: $platform"
 
-    # Check if podman or docker is installed
-    if command -v podman &>/dev/null; then
-        container_engine="podman"
-    elif command -v docker &>/dev/null; then
-        container_engine="docker"
-    else
-        die 1 "podman/docker is not installed"
+    # Check if podman is installed
+    if ! command -v podman &>/dev/null; then
+        die 1 "podman is not installed"
     fi
-    build_msg DOCKER "Container engine: $container_engine"
 
-    # Define container image org/name
-    # shellcheck disable=SC2001
-    container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
-    container_image_name="searxng"
+    (
+        set -eu
 
-    "$container_engine" pull "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant"
+        # Define container image org/name
+        # shellcheck disable=SC2001
+        container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
+        container_image_name="searxng"
 
-    # Get version tag
-    container_image_tag_version=$("$container_engine" inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' \
-        "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant")
+        podman pull "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant"
 
-    # Recreate tags
-    "$container_engine" tag "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant" "docker.io/$container_image_organization/$container_image_name:latest"
-    "$container_engine" tag "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant" "docker.io/$container_image_organization/$container_image_name:$container_image_tag_version"
+        # Get version tag
+        container_image_tag_version=$(podman inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' \
+            "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant")
 
-    "$container_engine" push "docker.io/$container_image_organization/$container_image_name:latest"
-    "$container_engine" push "docker.io/$container_image_organization/$container_image_name:$container_image_tag_version"
+        # Recreate tags
+        podman tag "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant" "docker.io/$container_image_organization/$container_image_name:latest"
+        podman tag "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant" "docker.io/$container_image_organization/$container_image_name:$container_image_tag_version"
+
+        podman push "docker.io/$container_image_organization/$container_image_name:latest"
+        podman push "docker.io/$container_image_organization/$container_image_name:$container_image_tag_version"
+    )
+    dump_return $?
 }
 
 # shellcheck disable=SC2119

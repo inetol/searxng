@@ -78,6 +78,7 @@ MANAGE += weblate.translations.commit weblate.push.translations
 MANAGE += data.all data.traits data.useragents data.locales data.currencies
 MANAGE += docs.html docs.live docs.gh-pages docs.prebuild docs.clean
 MANAGE += docker.build docker.buildx
+MANAGE += container.build container.buildx
 MANAGE += gecko.driver
 MANAGE += node.env node.env.dev node.clean
 MANAGE += py.build py.clean
