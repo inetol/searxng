@@ -26,7 +26,8 @@ env:
 
 jobs:
   build:
-    if: github.event.workflow_run.conclusion == 'success'
+    # TODO: Uncomment
+    # if: github.event.workflow_run.conclusion == 'success'
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
