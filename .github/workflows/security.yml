@@ -6,10 +6,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "42 05 * * *"
-  # TODO: Remove this
-  pull_request:
-    branches:
-      - container-gha
 
 permissions:
   contents: read
@@ -34,8 +30,7 @@ jobs:
           format: "sarif"
           output: "./trivy-results.sarif"
 
-      # - if: false
-      - name: Upload Trivy SARIF
+      - name: Upload SARIFs
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "./trivy-results.sarif"
