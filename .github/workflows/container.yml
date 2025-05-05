@@ -3,18 +3,14 @@ name: Container
 
 # yamllint disable-line rule:truthy
 on:
-  # TODO: Remove this
-  pull_request:
-    branches:
-      - container-gha
+  workflow_dispatch:
   workflow_run:
     workflows:
       - Integration
     types:
       - completed
-# TODO: Uncomment
-# branches:
-#   - master
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -26,8 +22,7 @@ env:
 
 jobs:
   build:
-    # TODO: Uncomment
-    # if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -68,8 +63,8 @@ jobs:
       - name: Setup cache container mounts
         uses: actions/cache@v4
         with:
-          key: "container-mounts-${{ hashFiles('./Dockerfile') }}"
-          restore-keys: "container-mounts-"
+          key: "container-mounts-${{ runner.arch }}-${{ hashFiles('./Dockerfile*') }}"
+          restore-keys: "container-mounts-${{ runner.arch }}-"
           path: |
             /var/tmp/buildah-cache/
             /var/tmp/buildah-cache-*/
@@ -88,8 +83,7 @@ jobs:
       - name: Build
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        # TODO: Revert to "ci.container.build" before PR merge
-        run: make -e GIT_URL=$(git remote get-url origin) container.build
+        run: make -e GIT_URL=$(git remote get-url origin) ci.container.build
 
   release:
     # TODO: Uncomment before merge
@@ -134,4 +128,5 @@ jobs:
         name: Release
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
+        # TODO: Try this with GHCR or testing registry before merge
         run: make -e GIT_URL=$(git remote get-url origin) ci.container.push
