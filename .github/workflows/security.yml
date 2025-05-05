@@ -18,25 +18,32 @@ jobs:
   container:
     name: Container
     runs-on: ubuntu-24.04-arm
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+          - armv7
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           persist-credentials: "false"
 
-      # TODO: Pull latest cache candidate container image from GHCR
       - name: Run Trivy scanner
         uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: "docker.io/searxng/searxng:latest"
+          # TODO: Pull latest cache candidate container image from GHCR
+          image-ref: "ghcr.io/searxng/cache:searxng-${{ matrix.arch }}"
           vuln-type: "os,library"
           severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
           ignore-unfixed: "false"
           format: "sarif"
           output: "./trivy-results.sarif"
 
-      - if: false
-        name: Upload Trivy SARIF
+      # - if: false
+      - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "./trivy-results.sarif"
