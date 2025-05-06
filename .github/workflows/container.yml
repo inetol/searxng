@@ -14,7 +14,7 @@ on:
   # TODO: Remove this
   pull_request:
     branches:
-      - container-gha
+      - master
 
 permissions:
   contents: read
@@ -179,5 +179,4 @@ jobs:
         name: Release
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        # TODO: Try this with GHCR or testing registry before merge
         run: make -e GIT_URL=$(git remote get-url origin) ci.container.push
