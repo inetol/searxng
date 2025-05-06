@@ -22,9 +22,7 @@ env:
 
 jobs:
   update:
-    if: |
-      github.repository_owner == 'searxng' && github.ref == 'refs/heads/master'
-      && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    if: github.repository_owner == 'searxng' && github.event.workflow_run.conclusion == 'success'
     name: Update
     runs-on: ubuntu-24.04-arm
     permissions:
@@ -67,7 +65,9 @@ jobs:
         run: make V=1 weblate.push.translations
 
   pr:
-    if: github.repository_owner == 'searxng' && github.ref == 'refs/heads/master'
+    if: |
+      github.repository_owner == 'searxng'
+      && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     name: Pull Request
     runs-on: ubuntu-24.04-arm
     permissions:

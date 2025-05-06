@@ -26,6 +26,7 @@ jobs:
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: amd64
@@ -93,6 +94,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs: build
     strategy:
+      fail-fast: false
       matrix:
         arch:
           - amd64
