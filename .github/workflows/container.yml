@@ -11,10 +11,6 @@ on:
       - completed
     branches:
       - master
-  # TODO: Remove this
-  pull_request:
-    branches:
-      - master
 
 permissions:
   contents: read
@@ -28,6 +24,7 @@ jobs:
   build:
     # TODO: Uncomment
     # if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: false
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
