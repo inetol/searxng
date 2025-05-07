@@ -446,6 +446,13 @@ ci.container.build() {
         python -m searx.version freeze
         eval "$(python -m searx.version)"
 
+        # TODO: Remove this
+        echo $VERSION_STRING
+        echo $VERSION_TAG
+        echo $DOCKER_TAG
+        echo $GIT_URL
+        echo $GIT_BRANCH
+
         # Get the last git commit id
         version_gitcommit=$(echo "$VERSION_TAG" | cut -d+ -f2)
         build_msg CONTAINER "Last commit: $version_gitcommit"
@@ -524,8 +531,9 @@ ci.container.test() {
         set -e
 
         # Define container image org/name
+        git_url="$(git remote get-url origin)"
         # shellcheck disable=SC2001
-        container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
+        container_image_organization="$(echo "$git_url" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
         container_image_name="searxng"
 
         podman pull "ghcr.io/$container_image_organization/cache:$container_image_name-$arch$variant"
@@ -594,8 +602,9 @@ ci.container.push() {
         set -e
 
         # Define container image org/name
+        git_url="$(git remote get-url origin)"
         # shellcheck disable=SC2001
-        container_image_organization="$(echo "$GIT_URL" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
+        container_image_organization="$(echo "$git_url" | sed 's|.*github\.com/\([^/]*\).*|\1|' || echo "searxng")"
         container_image_name="searxng"
 
         podman pull "ghcr.io/$container_image_organization/$container_image_name:cache-$arch$variant"

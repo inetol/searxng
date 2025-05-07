@@ -86,7 +86,7 @@ jobs:
       - name: Build
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.container.build
+        run: make ci.container.build
 
   test:
     name: Test (${{ matrix.arch }})
@@ -130,7 +130,7 @@ jobs:
       - name: Test
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.container.test
+        run: make ci.container.test
 
   release:
     # TODO: Uncomment before merge
@@ -176,4 +176,4 @@ jobs:
         name: Release
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.container.push
+        run: make ci.container.push
