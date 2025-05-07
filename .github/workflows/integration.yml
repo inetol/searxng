@@ -210,7 +210,7 @@ jobs:
   container-release:
     name: Release
     runs-on: ubuntu-24.04-arm
-    needs: test
+    needs: container-test
     steps:
       # - if: env.DOCKERHUB_USERNAME != ''
       - name: Checkout
