@@ -49,6 +49,13 @@ jobs:
       # Organization GHCR
       packages: write
 
+    outputs:
+      version_string: ${{ steps.build.outputs.version_string }}
+      version_tag: ${{ steps.build.outputs.version_tag }}
+      docker_tag: ${{ steps.build.outputs.docker_tag }}
+      git_url: ${{ steps.build.outputs.git_url }}
+      git_branch: ${{ steps.build.outputs.git_branch }}
+
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -88,6 +95,7 @@ jobs:
           password: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Build
+        id: build
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
         run: make ci.container.build
@@ -134,7 +142,7 @@ jobs:
       - name: Test
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-          GIT_URL: "${{ steps.build.outputs.git_url }}"
+          GIT_URL: "${{ needs.build.outputs.git_url }}"
         run: make ci.container.test
 
   release:
@@ -170,6 +178,6 @@ jobs:
       # - if: env.DOCKERHUB_USERNAME != ''
       - name: Release
         env:
-          GIT_URL: "${{ steps.build.outputs.git_url }}"
-          DOCKER_TAG: "${{ steps.build.outputs.docker_tag }}"
+          GIT_URL: "${{ needs.build.outputs.git_url }}"
+          DOCKER_TAG: "${{ needs.build.outputs.docker_tag }}"
         run: make ci.container.push
