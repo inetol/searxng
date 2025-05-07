@@ -10,6 +10,7 @@ on:
   pull_request:
     branches:
       - container-gha
+      - container-gha-2
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
