@@ -5,7 +5,6 @@ container.help() {
     cat <<EOF
 container.:
   build     : build container image
-  buildx    : build container image with BuildKit (if using Docker)
 EOF
 }
 
