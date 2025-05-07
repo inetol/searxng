@@ -26,9 +26,7 @@ env:
 
 jobs:
   build:
-    # TODO: Uncomment
-    # if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
-    if: false
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -146,9 +144,7 @@ jobs:
         run: make container.test
 
   release:
-    # TODO: Uncomment before merge
-    # if: github.repository_owner == 'searxng'
-    if: false
+    if: github.repository_owner == 'searxng' && github.ref_name == 'master'
     name: Release
     runs-on: ubuntu-24.04-arm
     needs:
