@@ -9,7 +9,7 @@ container.:
 EOF
 }
 
-CONTAINER_IMAGE_ORGANIZATION="searxng"
+CONTAINER_IMAGE_ORGANIZATION=${GITHUB_REPOSITORY_OWNER:-"searxng"}
 CONTAINER_IMAGE_NAME="searxng"
 
 container.build() {
@@ -199,12 +199,12 @@ ci.container.test() {
     (
         set -e
 
-        podman pull "ghcr.io/$container_image_organization/cache:$container_image_name-$arch$variant"
+        podman pull "ghcr.io/$CONTAINER_IMAGE_ORGANIZATION/cache:$CONTAINER_IMAGE_NAME-$arch$variant"
 
-        name="$container_image_name-$(date +%N)"
+        name="$CONTAINER_IMAGE_NAME-$(date +%N)"
 
         podman create --name="$name" --rm --timeout=60 --network="host" \
-            "ghcr.io/$container_image_organization/cache:$container_image_name-$arch$variant" >/dev/null
+            "ghcr.io/$CONTAINER_IMAGE_ORGANIZATION/cache:$CONTAINER_IMAGE_NAME-$arch$variant" >/dev/null
 
         podman start "$name" >/dev/null
         podman logs -f "$name" &
