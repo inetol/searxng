@@ -159,7 +159,7 @@ jobs:
         id: build
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make container.build podman
+        run: make podman.build
 
   # TODO: Remove this
   container-test:
@@ -205,7 +205,7 @@ jobs:
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
           GIT_URL: "${{ needs.container-build.outputs.git_url }}"
-        run: make ci.container.test
+        run: make container.test
 
   # TODO: Remove this
   container-release:
@@ -243,4 +243,4 @@ jobs:
         env:
           GIT_URL: "${{ needs.container-build.outputs.git_url }}"
           DOCKER_TAG: "${{ needs.container-build.outputs.docker_tag }}"
-        run: make ci.container.push
+        run: make container.push

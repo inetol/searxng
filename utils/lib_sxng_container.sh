@@ -128,8 +128,9 @@ container.build() {
             --build-arg="TIMESTAMP_SETTINGS=$(git log -1 --format="%cd" --date=unix -- ./searx/settings.yml)" \
             --build-arg="TIMESTAMP_UWSGI=$(git log -1 --format="%cd" --date=unix -- ./dockerfiles/uwsgi.ini)" \
             --tag="localhost/$CONTAINER_IMAGE_ORGANIZATION/$CONTAINER_IMAGE_NAME:builder" \
-            --file="./$dockerfile"
-        build_msg CONTAINER "Container image \"builder\" built."
+            --file="./$dockerfile" \
+            .
+        build_msg CONTAINER "Image \"builder\" built"
 
         # shellcheck disable=SC2086
         "$container_engine" $params_build \
@@ -138,8 +139,9 @@ container.build() {
             --build-arg="LABEL_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --build-arg="LABEL_VCS_REF=$(git rev-parse HEAD)" \
             --build-arg="LABEL_VCS_URL=$GIT_URL" \
-            --file="./$dockerfile"
-        build_msg CONTAINER "Container image built."
+            --file="./$dockerfile" \
+            .
+        build_msg CONTAINER "Image built"
 
         if [ "$GITHUB_ACTIONS" = "true" ]; then
             "$container_engine" push "ghcr.io/$CONTAINER_IMAGE_ORGANIZATION/cache:$CONTAINER_IMAGE_NAME-$arch$variant"
@@ -157,7 +159,7 @@ container.build() {
     dump_return $?
 }
 
-ci.container.test() {
+container.test() {
     if ! "$GITHUB_ACTIONS"; then
         die 1 "This command is intended to be run in GitHub Actions"
     fi
@@ -221,7 +223,7 @@ ci.container.test() {
     dump_return $?
 }
 
-ci.container.push() {
+container.push() {
     if ! "$GITHUB_ACTIONS"; then
         die 1 "This command is intended to be run in GitHub Actions"
     fi
@@ -300,6 +302,11 @@ ci.container.push() {
         done
     )
     dump_return $?
+}
+
+# Alias
+podman.build() {
+    container.build podman
 }
 
 # Alias
