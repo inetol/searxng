@@ -158,7 +158,7 @@ jobs:
         id: build
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make ci.container.build
+        run: make container.build podman
 
   # TODO: Remove this
   container-test:
