@@ -146,7 +146,7 @@ jobs:
       - name: Build
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.container.build
+        run: make ci.container.build
 
   # TODO: Remove this
   container-test:
@@ -191,4 +191,4 @@ jobs:
       - name: Test
         env:
           OVERRIDE_ARCH: "${{ matrix.arch }}"
-        run: make -e GIT_URL=$(git remote get-url origin) ci.container.test
+        run: make ci.container.test
