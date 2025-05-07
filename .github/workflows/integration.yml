@@ -9,7 +9,7 @@ on:
       - master
   pull_request:
     branches:
-      - master
+      - container-gha
 
 permissions:
   contents: read
