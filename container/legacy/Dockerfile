@@ -1,5 +1,3 @@
-# For armv7 architecture
-
 FROM docker.io/library/python:3.13-slim AS builder
 
 RUN apt-get update \
@@ -70,7 +68,8 @@ WORKDIR /usr/local/searxng/
 
 COPY --chown=searxng:searxng --from=builder /usr/local/searxng/venv/ ./venv/
 COPY --chown=searxng:searxng --from=builder /usr/local/searxng/searx/ ./searx/
-COPY --chown=searxng:searxng ./container/ ./container/
+COPY --chown=searxng:searxng ./container/config/ ./.template/
+COPY --chown=searxng:searxng ./container/entrypoint.sh ./entrypoint.sh
 
 LABEL org.opencontainers.image.authors="searxng <$GIT_URL>" \
       org.opencontainers.image.created=$LABEL_DATE \
@@ -103,4 +102,4 @@ EXPOSE 8080
 
 HEALTHCHECK CMD wget --quiet --tries=1 --spider http://localhost:8080/healthz || exit 1
 
-ENTRYPOINT ["/usr/local/searxng/container/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/searxng/entrypoint.sh"]
