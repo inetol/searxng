@@ -113,7 +113,7 @@ jobs:
             os: ubuntu-24.04-arm
             emulation: true
           - arch: ppc64le
-            os: ubuntu-24.04
+            os: ubuntu-24.04-arm
             emulation: true
 
     permissions:
@@ -190,7 +190,7 @@ jobs:
             os: ubuntu-24.04-arm
             emulation: true
           - arch: ppc64le
-            os: ubuntu-24.04
+            os: ubuntu-24.04-arm
             emulation: true
 
     steps:
