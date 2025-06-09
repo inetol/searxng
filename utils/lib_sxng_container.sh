@@ -59,6 +59,12 @@ container.build() {
         variant="v7"
         platform="linux/$arch/$variant"
         ;;
+    "POWERPC" | "ppc64le")
+        dockerfile="Dockerfile"
+        arch="ppc64le"
+        variant=""
+        platform="linux/$arch"
+        ;;
     *)
         err_msg "Unsupported architecture; $parch"
         exit 1
@@ -177,6 +183,11 @@ container.test() {
         variant="v7"
         platform="linux/$arch/$variant"
         ;;
+    "POWERPC" | "ppc64le")
+        arch="ppc64le"
+        variant=""
+        platform="linux/$arch"
+        ;;
     *)
         err_msg "Unsupported architecture; $parch"
         exit 1
@@ -211,7 +222,7 @@ container.test() {
 
 container.push() {
     # Architectures on manifest
-    local release_archs=("amd64" "arm64" "armv7")
+    local release_archs=("amd64" "arm64" "armv7" "ppc64le")
 
     local archs=()
     local variants=()
@@ -239,6 +250,11 @@ container.push() {
             archs+=("arm")
             variants+=("v7")
             platforms+=("linux/${archs[-1]}/${variants[-1]}")
+            ;;
+        "POWERPC" | "ppc64le")
+            archs+=("ppc64le")
+            variants+=("")
+            platforms+=("linux/${archs[-1]}")
             ;;
         *)
             err_msg "Unsupported architecture; $arch"

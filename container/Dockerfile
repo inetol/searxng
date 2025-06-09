@@ -1,4 +1,4 @@
-FROM ghcr.io/searxng/base:searxng-builder AS builder
+FROM ghcr.io/inetol/base:searxng-builder AS builder
 
 COPY ./requirements.txt ./requirements.txt
 
@@ -17,7 +17,7 @@ RUN python -m compileall -q searx \
     \( -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.svg" -o -name "*.ttf" -o -name "*.eot" \) \
     -type f -exec gzip -9 -k {} + -exec brotli --best {} +
 
-FROM ghcr.io/searxng/base:searxng AS dist
+FROM ghcr.io/inetol/base:searxng AS dist
 
 ARG LABEL_DATE="0001-01-01T00:00:00Z"
 ARG GIT_URL="unspecified"
