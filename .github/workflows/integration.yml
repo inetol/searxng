@@ -3,7 +3,6 @@ name: Integration
 
 # yamllint disable-line rule:truthy
 on:
-  workflow_dispatch:
   push:
     branches:
       - master
@@ -33,7 +32,7 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-          - "3.14"
+          - "3.14-dev"
 
     steps:
       - name: Setup Python
