@@ -30,7 +30,7 @@ from searx import get_setting
 log = logger.getChild("cache")
 
 
-class ExpireCacheCfg(msgspec.Struct):  # pylint: disable=too-few-public-methods
+class ExpireCacheCfg(msgspec.Struct, kw_only=True):  # pylint: disable=too-few-public-methods
     """Configuration of a :py:obj:`ExpireCache` cache."""
 
     name: str
