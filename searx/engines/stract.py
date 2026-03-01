@@ -6,8 +6,9 @@ ends.
 """
 
 from json import dumps
-from searx.utils import searxng_useragent
+
 from searx.enginelib.traits import EngineTraits
+from searx.utils import searxng_useragent
 
 about = {
     "website": "https://stract.com/",
@@ -16,7 +17,7 @@ about = {
     "require_api_key": False,
     "results": "JSON",
 }
-categories = ['general']
+categories = ["general"]
 paging = True
 
 base_url = "https://stract.com/beta/api"
@@ -24,19 +25,19 @@ search_url = base_url + "/search"
 
 
 def request(query, params):
-    params['url'] = search_url
-    params['method'] = "POST"
-    params['headers'] = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'User-Agent': searxng_useragent(),
+    params["url"] = search_url
+    params["method"] = "POST"
+    params["headers"] = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": searxng_useragent(),
     }
     region = traits.get_region(params["searxng_locale"], default=traits.all_locale)
-    params['data'] = dumps(
+    params["data"] = dumps(
         {
-            'query': query,
-            'page': params['pageno'] - 1,
-            'selectedRegion': region,
+            "query": query,
+            "page": params["pageno"] - 1,
+            "selectedRegion": region,
         }
     )
 
@@ -49,9 +50,9 @@ def response(resp):
     for result in resp.json()["webpages"]:
         results.append(
             {
-                'url': result['url'],
-                'title': result['title'],
-                'content': ''.join(fragment['text'] for fragment in result['snippet']['text']['fragments']),
+                "url": result["url"],
+                "title": result["title"],
+                "content": "".join(fragment["text"] for fragment in result["snippet"]["text"]["fragments"]),
             }
         )
 
@@ -60,14 +61,22 @@ def response(resp):
 
 def fetch_traits(engine_traits: EngineTraits):
     # pylint: disable=import-outside-toplevel
-    from searx import network
     from babel import Locale, languages
+
     from searx.locales import region_tag
+    from searx.network import get  # see https://github.com/searxng/searxng/issues/762
 
     territories = Locale("en").territories
 
-    json = network.get(base_url + "/docs/openapi.json").json()
-    regions = json['components']['schemas']['Region']['enum']
+    resp = get(
+        base_url + "/docs/openapi.json",
+        timeout=5,
+    )
+    if not resp.ok:
+        raise RuntimeError("Response from Stract is not OK.")
+
+    json = resp.json()
+    regions = json["components"]["schemas"]["Region"]["enum"]
 
     engine_traits.all_locale = regions[0]
 
